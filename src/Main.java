@@ -47,4 +47,9 @@ public class Main {
         reader.close();
         return sb.toString();
     }
+
+    private static void testCodingTree() {
+        CodingTree codingTree = new CodingTree("oiua shdfiouas vdfmioausdyhoasuidrymaesoc;,prueosah");
+        System.out.println(codingTree);
+    }
 }
