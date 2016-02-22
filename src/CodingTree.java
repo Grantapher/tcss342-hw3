@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class CodingTree {
     public String message;
@@ -18,16 +17,26 @@ public class CodingTree {
 
     private List<Byte> convertToBits(String message) {
         StringBuilder sb = new StringBuilder();
-        message.chars().mapToObj(CodingTree::intToCharCast)
-                .map(codes::get)
-                .forEach(sb::append);
+//        message.chars().mapToObj(CodingTree::intToCharCast)
+//                .map(codes::get)
+//                .forEach(sb::append);
+        for (int i = 0; i < message.length(); i++) {
+            char c = message.charAt(i);
+            String code = codes.get(c);
+            sb.append(code);
+        }
         String converted = sb.toString();
 
         //taken from http://stackoverflow.com/a/23664301
         String[] splits = converted.split("(?<=\\G.{8})");
-        List<Byte> bytes = Arrays.stream(splits)
-                .map(this::parseBinary)
-                .collect(Collectors.toList());
+//        List<Byte> bytes = Arrays.stream(splits)
+//                .map(this::parseBinary)
+//                .collect(Collectors.toList());
+        List<Byte> bytes = new ArrayList<>();
+        for (String split : splits) {
+            byte b = parseBinary(split);
+            bytes.add(b);
+        }
 
         int padding = 8 - converted.length() % 8;
         if (padding != 8) {
@@ -38,10 +47,6 @@ public class CodingTree {
         }
 
         return bytes;
-    }
-
-    private static char intToCharCast(int c) {
-        return (char) c;
     }
 
     private byte parseBinary(String s) {
@@ -65,8 +70,18 @@ public class CodingTree {
 
     private Map<Character, Integer> countCharacters(String message) {
         Map<Character, Integer> counts = new HashMap<>();
-        message.chars().mapToObj(CodingTree::intToCharCast)
-                .forEach(c -> counts.merge(c, 1, (oldVal, newVal) -> oldVal + newVal));
+//        message.chars().mapToObj(CodingTree::intToCharCast)
+//                .forEach(c -> counts.merge(c, 1, (oldVal, newVal) -> oldVal + newVal));
+        for (int i = 0; i < message.length(); i++) {
+            char c = message.charAt(i);
+            Integer count = counts.get(c);
+            if (count == null) {
+                counts.put(c, 1);
+            } else {
+                counts.put(c, count + 1);
+            }
+        }
+
         return counts;
     }
 
@@ -97,8 +112,14 @@ public class CodingTree {
         StringBuilder sb = new StringBuilder();
         if (!isLong) sb.append(message).append('\n');
         sb.append(codes.toString()).append('\n');
-        if (!isLong)
-            sb.append(bits.stream().map(this::byteToBinary).reduce((s, s2) -> s + " " + s2).get()).append('\n');
+        if (!isLong) {
+//            sb.append(bits.stream().map(this::byteToBinary).reduce((s, s2) -> s + " " + s2).get()).append('\n');
+            for (byte b : bits) {
+                String bin = byteToBinary(b);
+                sb.append(bin).append(' ');
+            }
+            sb.append('\n');
+        }
         sb.append(counts.toString()).append('\n');
         if (!isLong) sb.append(huffmanTree).append('\n');
         return sb.toString();
@@ -109,9 +130,13 @@ public class CodingTree {
 
         private HuffmanTree(Map<Character, Integer> counts) {
             PriorityQueue<Node> pq = new PriorityQueue<>();
-            counts.entrySet().stream()
-                    .map(Node::new)
-                    .forEach(pq::offer);
+//            counts.entrySet().stream()
+//                    .map(Node::new)
+//                    .forEach(pq::offer);
+            for (Map.Entry<Character, Integer> entry : counts.entrySet()) {
+                Node newNode = new Node(entry);
+                pq.offer(newNode);
+            }
 
             while (pq.size() > 1) {
                 pq.offer(pq.poll().merge(pq.poll()));
@@ -126,7 +151,11 @@ public class CodingTree {
                         "delete it for the other constructor.");
 
             root = new Node();
-            codes.entrySet().stream().forEach(this::addCode);
+//            codes.entrySet().stream().forEach(this::addCode);
+            for (Map.Entry<Character, String> entry : codes.entrySet()) {
+                addCode(entry);
+            }
+
         }
 
         private void addCode(Map.Entry<Character, String> entry) {
@@ -195,13 +224,13 @@ public class CodingTree {
             }
 
             @Override
-            public int compareTo(Node o) {
+            public int compareTo(@SuppressWarnings("NullableProblems") Node o) {
                 return Integer.compare(count, o.count);
             }
 
             /**
              * Combines the two nodes with a joining node with the counts of both side nodes added.
-             * <p>
+             * <p/>
              * "this" will be the left node and other will be the right node.
              *
              * @param other the right node
@@ -260,7 +289,7 @@ public class CodingTree {
 
                 printWhitespaces(firstSpaces, sb);
 
-                List<Node> newNodes = new ArrayList<Node>();
+                List<Node> newNodes = new ArrayList<>();
                 for (Node node : nodes) {
                     if (node != null) {
                         if (null != node.character) sb.append(node.character);
